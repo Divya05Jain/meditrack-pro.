@@ -73,35 +73,42 @@
 
   /* Board */
   --lane-width: 280px;
+  --doctor-col-width: 220px;
 }
 
 @media (max-width: 1440px) {
   :root {
     --lane-width: 260px;
     --drawer-width: 420px;
+    --doctor-col-width: 200px;
   }
 }
 
 @media (max-width: 1280px) {
   :root {
     --sidebar-width: 190px;
-    --lane-width: 240px;
-    --drawer-width: 420px;
+    --lane-width: 250px;
+    --drawer-width: 410px;
+    --doctor-col-width: 200px;
   }
 }
 
 @media (max-width: 1150px) {
   :root {
     --sidebar-width: var(--sidebar-width-collapsed);
+    --lane-width: 245px;
     --drawer-width: 400px;
     --schedule-panel-width: 400px;
+    --doctor-col-width: 185px;
   }
 }
 
 @media (max-width: 1024px) {
   :root {
-    --drawer-width: min(400px, 42vw);
-    --schedule-panel-width: min(400px, 42vw);
+    --lane-width: 240px;
+    --drawer-width: min(400px, 44vw);
+    --schedule-panel-width: min(400px, 44vw);
+    --doctor-col-width: 175px;
   }
 }
 

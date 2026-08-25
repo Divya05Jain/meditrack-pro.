@@ -84,11 +84,13 @@ export function toDateKey(date) {
 }
 
 export function formatScheduleDate(date) {
-  return date.toLocaleDateString('en-GB', {
+  const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
+  const rest = date.toLocaleDateString('en-GB', {
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
   });
+  return `${weekday}, ${rest}`;
 }
 
 export function formatScheduleDateShort(date) {

@@ -173,6 +173,18 @@
   min-height: 0;
 }
 
+.clinical-board__columns-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 8px;
+  width: 32px;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+  opacity: 0.9;
+}
+
 .clinical-board__columns {
   display: flex;
   gap: var(--space-3);

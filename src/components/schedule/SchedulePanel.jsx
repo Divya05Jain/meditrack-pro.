@@ -119,7 +119,10 @@ export function SchedulePanel({
                     <span className="schedule-panel__alert-label">Conflicts with</span>
                     <span className="schedule-panel__alert-value">
                       <strong>{validationError.conflictBlock.patientName}</strong>
-                      {' · '}
+                      {validationError.conflictBlock.appointmentId && (
+                        <> · {validationError.conflictBlock.appointmentId}</>
+                      )}
+                      <br />
                       {formatTimeRange(
                         validationError.conflictBlock.start,
                         validationError.conflictBlock.end
@@ -240,7 +243,7 @@ export function SchedulePanel({
               Cancel
             </button>
             <button type="submit" className="btn btn--primary">
-              {editingBlock ? 'Save' : 'Schedule'}
+              {editingBlock ? 'Save Changes' : 'Schedule Consultation'}
             </button>
           </div>
         </form>

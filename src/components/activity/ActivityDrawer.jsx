@@ -4,6 +4,7 @@ import { formatActivityTime } from '../../utils/formatters';
 
 const TYPE_CONFIG = {
   appointment_created: { dot: 'activity-timeline__dot--create', category: 'Appointment' },
+  appointment_updated: { dot: 'activity-timeline__dot--create', category: 'Appointment' },
   appointment_deleted: { dot: 'activity-timeline__dot--priority', category: 'Appointment' },
   appointment_moved: { dot: 'activity-timeline__dot--move', category: 'Workflow' },
   appointment_reordered: { dot: 'activity-timeline__dot--move', category: 'Workflow' },

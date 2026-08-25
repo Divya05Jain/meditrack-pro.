@@ -40,7 +40,7 @@ function resolveStaffName(staffId, getStaffById, getDoctorById) {
   return null;
 }
 
-export function AppointmentDrawer() {
+export function AppointmentDrawer({ onEdit }) {
   const {
     state,
     selectedAppointment,
@@ -51,6 +51,7 @@ export function AppointmentDrawer() {
   } = useClinic();
 
   const [editingSubtaskId, setEditingSubtaskId] = useState(null);
+  const [editingMode, setEditingMode] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!selectedAppointment) return null;
@@ -60,6 +61,7 @@ export function AppointmentDrawer() {
 
   const handleClose = () => {
     setEditingSubtaskId(null);
+    setEditingMode(null);
     setConfirmDelete(false);
     dispatch({ type: ACTION_TYPES.CLOSE_APPOINTMENT });
   };
@@ -101,6 +103,16 @@ export function AppointmentDrawer() {
     });
   };
 
+  const startEditing = (subtaskId, mode) => {
+    setEditingSubtaskId(subtaskId);
+    setEditingMode(mode);
+  };
+
+  const stopEditing = () => {
+    setEditingSubtaskId(null);
+    setEditingMode(null);
+  };
+
   return (
     <div className="drawer-overlay" onClick={handleBackdropClick}>
       <aside className="drawer drawer--appointment" role="dialog" aria-label="Appointment details">
@@ -115,6 +127,15 @@ export function AppointmentDrawer() {
             <p className="drawer__subtitle">{selectedAppointment.id}</p>
           </div>
           <div className="drawer__header-actions">
+            {onEdit && (
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={() => onEdit(selectedAppointment.id)}
+              >
+                Edit
+              </button>
+            )}
             <button
               type="button"
               className="drawer__close"
@@ -132,8 +153,8 @@ export function AppointmentDrawer() {
             <div className="visit-details">
               <p className="visit-details__meta">
                 {selectedAppointment.patient.age} yrs · {selectedAppointment.patient.gender}
-                <span className="visit-details__dept"> · {department?.name}</span>
               </p>
+              <p className="visit-details__dept">{department?.name}</p>
               <div className="visit-details__schedule">
                 <span className="visit-details__time">
                   {formatTime(selectedAppointment.appointmentTime)}
@@ -183,53 +204,66 @@ export function AppointmentDrawer() {
                         <p className="workflow-timeline__staff">{staffName}</p>
                       ) : (
                         <p className="workflow-timeline__staff workflow-timeline__staff--unassigned">
-                          Unassigned
+                          Assign staff
                         </p>
                       )}
 
                       {!isEditing ? (
-                        <button
-                          type="button"
-                          className="workflow-timeline__edit-btn"
-                          onClick={() => setEditingSubtaskId(subtask.id)}
-                        >
-                          Edit
-                        </button>
+                        <div className="workflow-timeline__actions">
+                          <button
+                            type="button"
+                            className="workflow-timeline__action-btn"
+                            onClick={() => startEditing(subtask.id, 'status')}
+                          >
+                            Change status
+                          </button>
+                          <button
+                            type="button"
+                            className="workflow-timeline__action-btn"
+                            onClick={() => startEditing(subtask.id, 'staff')}
+                          >
+                            Reassign
+                          </button>
+                        </div>
                       ) : (
                         <div className="workflow-timeline__controls">
-                          <select
-                            className="workflow-timeline__select"
-                            value={subtask.status}
-                            onChange={(e) =>
-                              handleStatusChange(subtask.id, e.target.value)
-                            }
-                            aria-label={`${subtask.title} status`}
-                          >
-                            {STATUS_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            className="workflow-timeline__select"
-                            value={subtask.staffId || ''}
-                            onChange={(e) =>
-                              handleStaffChange(subtask.id, e.target.value)
-                            }
-                            aria-label={`Assign staff for ${subtask.title}`}
-                          >
-                            <option value="">Assign staff</option>
-                            {staffOptions.map((member) => (
-                              <option key={member.id} value={member.id}>
-                                {member.name}
-                              </option>
-                            ))}
-                          </select>
+                          {editingMode === 'status' && (
+                            <select
+                              className="workflow-timeline__select"
+                              value={subtask.status}
+                              onChange={(e) =>
+                                handleStatusChange(subtask.id, e.target.value)
+                              }
+                              aria-label={`${subtask.title} status`}
+                            >
+                              {STATUS_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {editingMode === 'staff' && (
+                            <select
+                              className="workflow-timeline__select"
+                              value={subtask.staffId || ''}
+                              onChange={(e) =>
+                                handleStaffChange(subtask.id, e.target.value)
+                              }
+                              aria-label={`Assign staff for ${subtask.title}`}
+                            >
+                              <option value="">Assign staff</option>
+                              {staffOptions.map((member) => (
+                                <option key={member.id} value={member.id}>
+                                  {member.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                           <button
                             type="button"
                             className="btn btn--ghost btn--sm btn--full"
-                            onClick={() => setEditingSubtaskId(null)}
+                            onClick={stopEditing}
                           >
                             Done
                           </button>

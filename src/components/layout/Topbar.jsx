@@ -79,7 +79,7 @@ export function Topbar({
               className="btn btn--primary"
               onClick={onOpenSchedulePanel}
             >
-              + Schedule
+              + Schedule Consultation
             </button>
           </>
         ) : (

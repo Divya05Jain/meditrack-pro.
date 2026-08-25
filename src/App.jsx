@@ -6,7 +6,7 @@ import { ClinicalBoard } from './components/board/ClinicalBoard';
 import { DoctorSchedule } from './components/schedule/DoctorSchedule';
 import { AppointmentDrawer } from './components/appointments/AppointmentDrawer';
 import { ActivityDrawer } from './components/activity/ActivityDrawer';
-import { NewAppointmentModal } from './components/appointments/NewAppointmentModal';
+import { AppointmentModal } from './components/appointments/NewAppointmentModal';
 import { useClinic } from './hooks/useClinic';
 import { getClinicNow } from './utils/formatters';
 import { ACTION_TYPES } from './reducers/clinicReducer';
@@ -20,7 +20,7 @@ import './styles/schedule.css';
 function AppContent() {
   const { state, dispatch } = useClinic();
   const [searchValue, setSearchValue] = useState('');
-  const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [appointmentModal, setAppointmentModal] = useState({ open: false, editId: null });
   const [scheduleDate, setScheduleDate] = useState(getClinicNow());
   const [requestSchedulePanel, setRequestSchedulePanel] = useState(false);
   const [specialtyFilter, setSpecialtyFilter] = useState('');
@@ -30,20 +30,24 @@ function AppContent() {
     [state.doctors]
   );
 
+  const openCreateModal = () => setAppointmentModal({ open: true, editId: null });
+  const openEditModal = (id) => setAppointmentModal({ open: true, editId: id });
+  const closeModal = () => setAppointmentModal({ open: false, editId: null });
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key !== 'Escape') return;
-      if (state.selectedAppointmentId) {
+      if (appointmentModal.open) {
+        closeModal();
+      } else if (state.selectedAppointmentId) {
         dispatch({ type: ACTION_TYPES.CLOSE_APPOINTMENT });
       } else if (state.isActivityOpen) {
         dispatch({ type: ACTION_TYPES.TOGGLE_ACTIVITY, payload: false });
-      } else if (isNewAppointmentOpen) {
-        setIsNewAppointmentOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.selectedAppointmentId, state.isActivityOpen, isNewAppointmentOpen, dispatch]);
+  }, [appointmentModal.open, state.selectedAppointmentId, state.isActivityOpen, dispatch]);
 
   return (
     <div className="app">
@@ -52,7 +56,7 @@ function AppContent() {
         <Topbar
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          onNewAppointment={() => setIsNewAppointmentOpen(true)}
+          onNewAppointment={openCreateModal}
           scheduleDate={scheduleDate}
           onScheduleDateChange={setScheduleDate}
           onOpenSchedulePanel={() => setRequestSchedulePanel(true)}
@@ -77,11 +81,12 @@ function AppContent() {
         </main>
       </div>
 
-      <AppointmentDrawer />
+      <AppointmentDrawer onEdit={openEditModal} />
       <ActivityDrawer />
-      <NewAppointmentModal
-        isOpen={isNewAppointmentOpen}
-        onClose={() => setIsNewAppointmentOpen(false)}
+      <AppointmentModal
+        isOpen={appointmentModal.open}
+        editAppointmentId={appointmentModal.editId}
+        onClose={closeModal}
       />
     </div>
   );

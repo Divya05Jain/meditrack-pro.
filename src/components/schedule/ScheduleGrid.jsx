@@ -13,6 +13,7 @@ import { generateScheduleBlockId } from '../../utils/ids';
 import {
   formatHourAxis,
   formatTimeRange,
+  formatTime,
   toDateKey,
   isScheduleNoShow,
 } from '../../utils/formatters';
@@ -42,6 +43,17 @@ function getSlotMinutes(slot) {
   return timeToMinutes(slot) - GRID_START_MIN;
 }
 
+function getBlockTier(start, end) {
+  const minutes = timeToMinutes(end) - timeToMinutes(start);
+  if (minutes >= 45) return 'wide';
+  if (minutes >= 25) return 'medium';
+  return 'narrow';
+}
+
+function getFirstName(fullName) {
+  return fullName.split(' ')[0];
+}
+
 export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, specialtyFilter = '' }) {
   const { state, dispatch, getDepartmentById } = useClinic();
   const { viewAppointment } = useBookingActions();
@@ -56,6 +68,7 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
   const [validationError, setValidationError] = useState(null);
   const [attemptedRange, setAttemptedRange] = useState(null);
   const [popover, setPopover] = useState(null);
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
 
   const stats = useMemo(() => {
     let bookings = 0;
@@ -198,6 +211,7 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
       doctor,
       position: { top, left },
     });
+    setSelectedBlockId(block.id);
   };
 
   return (
@@ -344,38 +358,47 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
                       attemptedRange?.doctorId === doctor.id;
                     const priority = apt?.priority || 'normal';
                     const noShow = isScheduleNoShow(block, apt);
+                    const tier = getBlockTier(block.start, block.end);
+                    const deptName =
+                      getDepartmentById(apt?.departmentId)?.name || doctor.specialty;
+                    const isSelected = selectedBlockId === block.id;
 
                     return (
                       <button
                         key={block.id}
                         type="button"
-                        className={`resource-timeline__block resource-timeline__block--${priority} ${isConflict ? 'resource-timeline__block--conflict' : ''} ${noShow ? 'resource-timeline__block--noshow' : ''}`}
+                        className={`resource-timeline__block resource-timeline__block--${priority} resource-timeline__block--${tier} ${isConflict ? 'resource-timeline__block--conflict' : ''} ${noShow ? 'resource-timeline__block--noshow' : ''} ${isSelected ? 'resource-timeline__block--selected' : ''}`}
                         style={getBlockStyle(block.start, block.end, GRID_START_MIN, TOTAL_MINUTES)}
                         onClick={(e) => handleBlockClick(e, block, doctor)}
-                        title={
-                          noShow
-                            ? `${block.patientName} — No-show, doctor is free`
-                            : `${block.patientName} — ${formatTimeRange(block.start, block.end)}`
-                        }
+                        aria-label={`${block.patientName}, ${formatTimeRange(block.start, block.end)}`}
                       >
                         {isConflict && <span className="resource-timeline__block-warn">⚠</span>}
                         {noShow && (
                           <span className="resource-timeline__noshow-badge">No-show</span>
                         )}
-                        {!noShow && (
+                        {priority !== 'normal' && !noShow && (
                           <span
                             className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`}
                           />
                         )}
-                        <span className="resource-timeline__block-name">{block.patientName}</span>
-                        {!noShow && (
+                        <span className="resource-timeline__block-name">
+                          {tier === 'narrow' ? getFirstName(block.patientName) : block.patientName}
+                        </span>
+                        {tier === 'wide' && !noShow && (
                           <span className="resource-timeline__block-type">
-                            {getDepartmentById(apt?.departmentId)?.name || doctor.specialty} consultation
+                            {deptName} consultation
                           </span>
                         )}
-                        <span className="resource-timeline__block-time">
-                          {formatTimeRange(block.start, block.end)}
-                        </span>
+                        {(tier === 'medium' || tier === 'wide') && (
+                          <span className="resource-timeline__block-time">
+                            {formatTimeRange(block.start, block.end)}
+                          </span>
+                        )}
+                        {tier === 'narrow' && (
+                          <span className="resource-timeline__block-time resource-timeline__block-time--compact">
+                            {formatTime(block.start)}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -384,9 +407,9 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
             );
           })}
         </div>
-        {stats.bookings === 0 && (
-          <div className="resource-schedule__empty">
-            No consultations scheduled for this date
+        {stats.bookings === 0 && filteredDoctors.length > 0 && (
+          <div className="resource-schedule__empty" role="status">
+            No consultations scheduled — roster is available for booking
           </div>
         )}
       </div>
@@ -431,7 +454,10 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
             state.appointments.find((a) => a.id === popover.block.appointmentId)?.departmentId
           )}
           position={popover.position}
-          onClose={() => setPopover(null)}
+          onClose={() => {
+            setPopover(null);
+            setSelectedBlockId(null);
+          }}
           onView={() => {
             viewAppointment(popover.block.appointmentId);
             setPopover(null);

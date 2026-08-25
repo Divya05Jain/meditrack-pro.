@@ -14,6 +14,14 @@ function getToastForAction(action, state) {
       const apt = action.payload.appointment;
       return { title: 'Appointment created', message: `${apt.patient.name} · ${apt.id}` };
     }
+    case ACTION_TYPES.UPDATE_APPOINTMENT: {
+      const { id, updates } = action.payload;
+      const name = updates?.patient?.name;
+      return {
+        title: 'Appointment updated',
+        message: name ? `${name} · ${id}` : id,
+      };
+    }
     case ACTION_TYPES.DELETE_APPOINTMENT: {
       const apt = state.appointments.find((a) => a.id === action.payload.id);
       return {

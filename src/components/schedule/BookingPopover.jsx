@@ -78,7 +78,7 @@ export function BookingPopover({
               View Visit
             </button>
             <button type="button" className="btn btn--primary" onClick={onEdit}>
-              Edit
+              Edit Appointment
             </button>
           </div>
           <button type="button" className="btn btn--danger btn--full" onClick={onDelete}>
