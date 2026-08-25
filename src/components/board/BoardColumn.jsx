@@ -4,28 +4,28 @@ import { EmptyState } from '../common/EmptyState';
 
 const COLUMN_EMPTY = {
   waiting: {
-    title: 'No patients',
-    description: 'New appointments will appear here while awaiting triage.',
+    title: 'No patients in this stage',
+    description: 'New appointments appear here while awaiting triage.',
   },
   triage: {
-    title: 'No patients',
-    description: 'Appointments moved here will appear in this stage.',
+    title: 'No patients in this stage',
+    description: 'Patients moved to triage will appear here.',
   },
   consultation: {
-    title: 'No consultations',
-    description: 'Patients in doctor consultation will appear here.',
+    title: 'No patients in this stage',
+    description: 'Active consultations will appear here.',
   },
   diagnostics: {
-    title: 'No diagnostics',
-    description: 'Lab and imaging visits will appear here.',
+    title: 'No patients in this stage',
+    description: 'Lab and imaging visits appear here.',
   },
   pharmacy: {
-    title: 'No pharmacy visits',
-    description: 'Dispensing queue will appear here.',
+    title: 'No patients in this stage',
+    description: 'Dispensing queue appears here.',
   },
   completed: {
-    title: 'No completed visits',
-    description: 'Finished appointments will appear here.',
+    title: 'No patients in this stage',
+    description: 'Completed visits appear here.',
   },
 };
 

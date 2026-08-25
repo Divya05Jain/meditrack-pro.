@@ -4,6 +4,7 @@ export function DoctorSchedule({
   selectedDate,
   requestOpenPanel,
   onPanelOpened,
+  specialtyFilter,
 }) {
   return (
     <div className="doctor-schedule-page">
@@ -11,6 +12,7 @@ export function DoctorSchedule({
         selectedDate={selectedDate}
         requestOpenPanel={requestOpenPanel}
         onPanelOpened={onPanelOpened}
+        specialtyFilter={specialtyFilter}
       />
     </div>
   );

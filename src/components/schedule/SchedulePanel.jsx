@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { addMinutesToTime, getDurationMinutes } from '../../utils/scheduling';
 import {
-  formatTime,
   formatScheduleDateShort,
   formatTimeRange,
 } from '../../utils/formatters';
@@ -59,15 +58,13 @@ export function SchedulePanel({
   return (
     <>
       <div className="schedule-panel__backdrop" onClick={onClose} />
-      <aside className="schedule-panel" role="dialog" aria-modal="true">
+      <aside className="schedule-panel" role="dialog" aria-modal="true" aria-label="Schedule consultation">
         <div className="schedule-panel__header">
           <div>
-            <h2 className="schedule-panel__title">
-              {editingBlock ? 'Edit Appointment' : 'Schedule Appointment'}
-            </h2>
+            <h2 className="schedule-panel__title">Schedule Consultation</h2>
             <p className="schedule-panel__subtitle">Assign a consultation window</p>
           </div>
-          <button type="button" className="drawer__close" onClick={onClose}>
+          <button type="button" className="drawer__close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
@@ -93,22 +90,36 @@ export function SchedulePanel({
           {validationError && (
             <div
               className={`schedule-panel__alert schedule-panel__alert--${validationError.type}`}
+              role="alert"
             >
               <div className="schedule-panel__alert-icon">⚠</div>
               <div className="schedule-panel__alert-content">
                 <strong className="schedule-panel__alert-title">
                   {validationError.type === 'overlap'
-                    ? 'Schedule conflict'
+                    ? 'Scheduling conflict'
                     : validationError.type === 'shift'
                       ? 'Outside rostered shift'
                       : 'Invalid time'}
                 </strong>
 
+                <div className="schedule-panel__alert-row">
+                  <span className="schedule-panel__alert-label">Requested</span>
+                  <span className="schedule-panel__alert-value">
+                    <strong>
+                      {formatTimeRange(
+                        validationError.requestedStart,
+                        validationError.requestedEnd
+                      )}
+                    </strong>
+                  </span>
+                </div>
+
                 {validationError.conflictBlock && (
-                  <div className="schedule-panel__alert-block">
-                    <span>{doctor.name} already has:</span>
-                    <strong>{validationError.conflictBlock.patientName}</strong>
-                    <span>
+                  <div className="schedule-panel__alert-row">
+                    <span className="schedule-panel__alert-label">Conflicts with</span>
+                    <span className="schedule-panel__alert-value">
+                      <strong>{validationError.conflictBlock.patientName}</strong>
+                      {' · '}
                       {formatTimeRange(
                         validationError.conflictBlock.start,
                         validationError.conflictBlock.end
@@ -118,39 +129,38 @@ export function SchedulePanel({
                 )}
 
                 {validationError.type === 'shift' && (
-                  <p className="schedule-panel__alert-text">
-                    {doctor.name} is available{' '}
-                    {formatTimeRange(validationError.shiftStart, validationError.shiftEnd)}
-                  </p>
+                  <div className="schedule-panel__alert-row">
+                    <span className="schedule-panel__alert-label">Roster</span>
+                    <span className="schedule-panel__alert-value">
+                      {formatTimeRange(validationError.shiftStart, validationError.shiftEnd)}
+                    </span>
+                  </div>
                 )}
-
-                <div className="schedule-panel__alert-requested">
-                  <span>Your requested window:</span>
-                  <strong>
-                    {formatTimeRange(
-                      validationError.requestedStart,
-                      validationError.requestedEnd
-                    )}
-                  </strong>
-                </div>
 
                 {validationError.suggested && (
                   <div className="schedule-panel__alert-suggested">
-                    <span>Suggested next available:</span>
-                    <strong>
-                      {formatTimeRange(
-                        validationError.suggested.start,
-                        validationError.suggested.end
-                      )}
-                    </strong>
+                    <div className="schedule-panel__alert-row">
+                      <span className="schedule-panel__alert-label">
+                        {validationError.type === 'shift' ? 'Earliest valid' : 'Next available'}
+                      </span>
+                      <span className="schedule-panel__alert-value">
+                        <strong>
+                          {formatTimeRange(
+                            validationError.suggested.start,
+                            validationError.suggested.end
+                          )}
+                        </strong>
+                      </span>
+                    </div>
                     <button
                       type="button"
                       className="schedule-panel__suggest-btn"
-                      onClick={() =>
-                        onUseSuggested(validationError.suggested)
-                      }
+                      onClick={() => onUseSuggested(validationError.suggested)}
                     >
-                      Use suggested time
+                      Use {formatTimeRange(
+                        validationError.suggested.start,
+                        validationError.suggested.end
+                      )}
                     </button>
                   </div>
                 )}
@@ -230,7 +240,7 @@ export function SchedulePanel({
               Cancel
             </button>
             <button type="submit" className="btn btn--primary">
-              {editingBlock ? 'Save Changes' : 'Confirm Schedule'}
+              {editingBlock ? 'Save' : 'Schedule'}
             </button>
           </div>
         </form>

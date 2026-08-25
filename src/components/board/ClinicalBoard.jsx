@@ -152,17 +152,23 @@ export function ClinicalBoard({ searchValue, onSearchChange }) {
         }}
       />
 
-      <div className="clinical-board__columns">
-        {WORKFLOW_COLUMNS.map((column) => (
-          <BoardColumn
-            key={column.id}
-            column={column}
-            appointments={appointmentsByStatus[column.id]}
-            draggingId={draggingId}
-            onDragStart={setDraggingId}
-            onDrop={handleDrop}
-          />
-        ))}
+      {filteredAppointments.length === 0 && (searchValue || departmentId || priority) && (
+        <p className="board-no-results">No appointments match your filters</p>
+      )}
+
+      <div className="clinical-board__columns-wrap">
+        <div className="clinical-board__columns">
+          {WORKFLOW_COLUMNS.map((column) => (
+            <BoardColumn
+              key={column.id}
+              column={column}
+              appointments={appointmentsByStatus[column.id]}
+              draggingId={draggingId}
+              onDragStart={setDraggingId}
+              onDrop={handleDrop}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

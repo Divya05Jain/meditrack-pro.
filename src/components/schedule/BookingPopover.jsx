@@ -75,7 +75,7 @@ export function BookingPopover({
         <div className="booking-popover__actions">
           <div className="booking-popover__actions-row">
             <button type="button" className="btn btn--ghost" onClick={onView}>
-              View
+              View Visit
             </button>
             <button type="button" className="btn btn--primary" onClick={onEdit}>
               Edit

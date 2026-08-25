@@ -2,14 +2,17 @@ import { useClinic } from '../../hooks/useClinic';
 import { ACTION_TYPES } from '../../reducers/clinicReducer';
 import { formatActivityTime } from '../../utils/formatters';
 
-const TYPE_DOT_CLASS = {
-  appointment_created: 'activity-timeline__dot--create',
-  appointment_moved: 'activity-timeline__dot--move',
-  appointment_reordered: 'activity-timeline__dot--move',
-  staff_assigned: 'activity-timeline__dot--assign',
-  schedule_created: 'activity-timeline__dot--schedule',
-  subtask_status_changed: 'activity-timeline__dot--subtask',
-  priority_changed: 'activity-timeline__dot--priority',
+const TYPE_CONFIG = {
+  appointment_created: { dot: 'activity-timeline__dot--create', category: 'Appointment' },
+  appointment_deleted: { dot: 'activity-timeline__dot--priority', category: 'Appointment' },
+  appointment_moved: { dot: 'activity-timeline__dot--move', category: 'Workflow' },
+  appointment_reordered: { dot: 'activity-timeline__dot--move', category: 'Workflow' },
+  staff_assigned: { dot: 'activity-timeline__dot--assign', category: 'Staff' },
+  schedule_created: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
+  schedule_updated: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
+  schedule_deleted: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
+  subtask_status_changed: { dot: 'activity-timeline__dot--subtask', category: 'Workflow' },
+  priority_changed: { dot: 'activity-timeline__dot--priority', category: 'Appointment' },
 };
 
 function splitMessage(message) {
@@ -37,6 +40,14 @@ function splitMessage(message) {
     };
   }
 
+  const deletedMatch = message.match(/^(.+?) appointment deleted — (.+)$/);
+  if (deletedMatch) {
+    return {
+      primary: 'Appointment deleted',
+      secondary: `${deletedMatch[1]} · ${deletedMatch[2]}`,
+    };
+  }
+
   return { primary: message, secondary: null };
 }
 
@@ -55,12 +66,12 @@ export function ActivityDrawer() {
 
   return (
     <div className="drawer-overlay" onClick={handleBackdropClick}>
-      <aside className="drawer drawer--activity">
+      <aside className="drawer drawer--activity" role="dialog" aria-label="Activity log">
         <div className="drawer__header">
           <div>
-            <h2 className="drawer__title">Activity Log</h2>
+            <h2 className="drawer__title">Activity</h2>
             <p className="drawer__subtitle">
-              {state.activity.length} recent operations
+              {state.activity.length} session event{state.activity.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
@@ -74,29 +85,38 @@ export function ActivityDrawer() {
         </div>
 
         <div className="drawer__body">
-          <ul className="activity-timeline">
-            {state.activity.map((entry) => {
-              const { primary, secondary } = splitMessage(entry.message);
-              const dotClass = TYPE_DOT_CLASS[entry.type] || '';
+          {state.activity.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state__icon" aria-hidden="true">○</div>
+              <p className="empty-state__title">No activity yet</p>
+              <p className="empty-state__description">
+                Actions you take will appear here in real time.
+              </p>
+            </div>
+          ) : (
+            <ul className="activity-timeline">
+              {state.activity.map((entry) => {
+                const { primary, secondary } = splitMessage(entry.message);
+                const config = TYPE_CONFIG[entry.type] || { dot: '', category: 'System' };
 
-              return (
-                <li key={entry.id} className="activity-timeline__item">
-                  <div className="activity-timeline__time">
-                    {formatActivityTime(entry.timestamp)}
-                  </div>
-                  <div
-                    className={`activity-timeline__dot ${dotClass}`.trim()}
-                  />
-                  <div className="activity-timeline__content">
-                    <p className="activity-timeline__message">{primary}</p>
-                    {secondary && (
-                      <p className="activity-timeline__secondary">{secondary}</p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                return (
+                  <li key={entry.id} className="activity-timeline__item">
+                    <div className="activity-timeline__time">
+                      {formatActivityTime(entry.timestamp)}
+                    </div>
+                    <div className={`activity-timeline__dot ${config.dot}`.trim()} />
+                    <div className="activity-timeline__content">
+                      <p className="activity-timeline__category">{config.category}</p>
+                      <p className="activity-timeline__message">{primary}</p>
+                      {secondary && (
+                        <p className="activity-timeline__secondary">{secondary}</p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </aside>
     </div>

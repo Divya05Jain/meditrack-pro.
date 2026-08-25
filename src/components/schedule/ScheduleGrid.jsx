@@ -42,10 +42,15 @@ function getSlotMinutes(slot) {
   return timeToMinutes(slot) - GRID_START_MIN;
 }
 
-export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) {
+export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, specialtyFilter = '' }) {
   const { state, dispatch, getDepartmentById } = useClinic();
   const { viewAppointment } = useBookingActions();
   const dateKey = toDateKey(selectedDate);
+
+  const filteredDoctors = useMemo(() => {
+    if (!specialtyFilter) return state.doctors;
+    return state.doctors.filter((d) => d.specialty === specialtyFilter);
+  }, [state.doctors, specialtyFilter]);
 
   const [panelState, setPanelState] = useState(null);
   const [validationError, setValidationError] = useState(null);
@@ -58,6 +63,7 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
     let urgent = 0;
 
     state.doctors.forEach((doc) => {
+      if (specialtyFilter && doc.specialty !== specialtyFilter) return;
       const daySchedule = filterScheduleByDate(doc.schedule, dateKey);
       bookings += daySchedule.length;
       openWindows += countOpenSlots(doc, doc.schedule, dateKey);
@@ -71,12 +77,12 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
     });
 
     return {
-      doctorsOnDuty: state.doctors.length,
+      doctorsOnDuty: filteredDoctors.length,
       bookings,
       openWindows,
       urgent,
     };
-  }, [state.doctors, state.appointments, dateKey]);
+  }, [state.doctors, state.appointments, dateKey, specialtyFilter, filteredDoctors.length]);
 
   const openPanel = (doctor, startTime = null, editingBlock = null) => {
     setValidationError(null);
@@ -91,11 +97,11 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
   };
 
   useEffect(() => {
-    if (requestOpenPanel && !panelState) {
-      openPanel(state.doctors[0], '09:00');
+    if (requestOpenPanel && !panelState && filteredDoctors.length > 0) {
+      openPanel(filteredDoctors[0], '09:00');
       onPanelOpened?.();
     }
-  }, [requestOpenPanel, panelState, state.doctors, onPanelOpened]);
+  }, [requestOpenPanel, panelState, filteredDoctors, onPanelOpened]);
 
   const handleSchedule = ({ doctorId, start, end, appointmentId, blockId }) => {
     const doctor = state.doctors.find((d) => d.id === doctorId);
@@ -199,17 +205,17 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
       <div className="resource-schedule__stats">
         <div className="resource-schedule__stat">
           <span className="resource-schedule__stat-value">{stats.doctorsOnDuty}</span>
-          <span className="resource-schedule__stat-label">Doctors On Duty</span>
+          <span className="resource-schedule__stat-label">On Duty</span>
         </div>
         <div className="resource-schedule__stat-divider" />
         <div className="resource-schedule__stat">
           <span className="resource-schedule__stat-value">{stats.bookings}</span>
-          <span className="resource-schedule__stat-label">Bookings</span>
+          <span className="resource-schedule__stat-label">Consultations</span>
         </div>
         <div className="resource-schedule__stat-divider" />
         <div className="resource-schedule__stat">
           <span className="resource-schedule__stat-value">{stats.openWindows}</span>
-          <span className="resource-schedule__stat-label">Open Consultation Windows</span>
+          <span className="resource-schedule__stat-label">Open Windows</span>
         </div>
         <div className="resource-schedule__stat-divider" />
         <div className="resource-schedule__stat">
@@ -259,7 +265,7 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
             </div>
           </div>
 
-          {state.doctors.map((doctor) => {
+          {filteredDoctors.map((doctor) => {
             const daySchedule = filterScheduleByDate(doctor.schedule, dateKey);
 
             return (
@@ -378,6 +384,11 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
             );
           })}
         </div>
+        {stats.bookings === 0 && (
+          <div className="resource-schedule__empty">
+            No consultations scheduled for this date
+          </div>
+        )}
       </div>
 
       {panelState && (
