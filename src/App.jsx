@@ -8,6 +8,7 @@ import { AppointmentDrawer } from './components/appointments/AppointmentDrawer';
 import { ActivityDrawer } from './components/activity/ActivityDrawer';
 import { NewAppointmentModal } from './components/appointments/NewAppointmentModal';
 import { useClinic } from './hooks/useClinic';
+import { getClinicNow } from './utils/formatters';
 
 import './styles/globals.css';
 import './styles/layout.css';
@@ -19,6 +20,8 @@ function AppContent() {
   const { state } = useClinic();
   const [searchValue, setSearchValue] = useState('');
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState(getClinicNow());
+  const [requestSchedulePanel, setRequestSchedulePanel] = useState(false);
 
   return (
     <div className="app">
@@ -28,6 +31,9 @@ function AppContent() {
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           onNewAppointment={() => setIsNewAppointmentOpen(true)}
+          scheduleDate={scheduleDate}
+          onScheduleDateChange={setScheduleDate}
+          onOpenSchedulePanel={() => setRequestSchedulePanel(true)}
         />
         <main className="app__content">
           {state.activeView === 'board' ? (
@@ -36,7 +42,11 @@ function AppContent() {
               onSearchChange={setSearchValue}
             />
           ) : (
-            <DoctorSchedule />
+            <DoctorSchedule
+              selectedDate={scheduleDate}
+              requestOpenPanel={requestSchedulePanel}
+              onPanelOpened={() => setRequestSchedulePanel(false)}
+            />
           )}
         </main>
       </div>

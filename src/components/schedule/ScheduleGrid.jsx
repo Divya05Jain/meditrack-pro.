@@ -14,6 +14,7 @@ import {
   formatHourAxis,
   formatTimeRange,
   toDateKey,
+  isScheduleNoShow,
 } from '../../utils/formatters';
 import { SchedulePanel } from './SchedulePanel';
 import { BookingPopover, useBookingActions } from './BookingPopover';
@@ -99,13 +100,12 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
   const handleSchedule = ({ doctorId, start, end, appointmentId, blockId }) => {
     const doctor = state.doctors.find((d) => d.id === doctorId);
     const appointment = state.appointments.find((a) => a.id === appointmentId);
-    const daySchedule = filterScheduleByDate(doctor.schedule, dateKey);
 
     const validation = validateScheduleAssignment({
       doctor,
       start,
       end,
-      existingSchedule: daySchedule,
+      existingSchedule: doctor.schedule,
       excludeId: blockId,
       date: dateKey,
     });
@@ -171,13 +171,26 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
 
   const handleBlockClick = (e, block, doctor) => {
     const rect = e.currentTarget.getBoundingClientRect();
+    const popoverWidth = 300;
+    const popoverHeight = 320;
+    const padding = 12;
+
+    let top = rect.bottom + 8;
+    let left = rect.left;
+
+    if (left + popoverWidth > window.innerWidth - padding) {
+      left = window.innerWidth - popoverWidth - padding;
+    }
+    left = Math.max(padding, left);
+
+    if (top + popoverHeight > window.innerHeight - padding) {
+      top = Math.max(padding, rect.top - popoverHeight - 8);
+    }
+
     setPopover({
       block,
       doctor,
-      position: {
-        top: rect.bottom + 8,
-        left: Math.min(rect.left, window.innerWidth - 300),
-      },
+      position: { top, left },
     });
   };
 
@@ -218,6 +231,10 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
           <span className="resource-schedule__legend-item">
             <span className="resource-schedule__legend-swatch resource-schedule__legend-swatch--off" />
             Off shift
+          </span>
+          <span className="resource-schedule__legend-item">
+            <span className="resource-schedule__legend-swatch resource-schedule__legend-swatch--noshow" />
+            No-show
           </span>
         </div>
       </div>
@@ -320,21 +337,36 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
                       validationError.conflictBlockId === block.id &&
                       attemptedRange?.doctorId === doctor.id;
                     const priority = apt?.priority || 'normal';
+                    const noShow = isScheduleNoShow(block, apt);
 
                     return (
                       <button
                         key={block.id}
                         type="button"
-                        className={`resource-timeline__block resource-timeline__block--${priority} ${isConflict ? 'resource-timeline__block--conflict' : ''}`}
+                        className={`resource-timeline__block resource-timeline__block--${priority} ${isConflict ? 'resource-timeline__block--conflict' : ''} ${noShow ? 'resource-timeline__block--noshow' : ''}`}
                         style={getBlockStyle(block.start, block.end, GRID_START_MIN, TOTAL_MINUTES)}
                         onClick={(e) => handleBlockClick(e, block, doctor)}
+                        title={
+                          noShow
+                            ? `${block.patientName} — No-show, doctor is free`
+                            : `${block.patientName} — ${formatTimeRange(block.start, block.end)}`
+                        }
                       >
                         {isConflict && <span className="resource-timeline__block-warn">⚠</span>}
-                        <span className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`} />
+                        {noShow && (
+                          <span className="resource-timeline__noshow-badge">No-show</span>
+                        )}
+                        {!noShow && (
+                          <span
+                            className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`}
+                          />
+                        )}
                         <span className="resource-timeline__block-name">{block.patientName}</span>
-                        <span className="resource-timeline__block-type">
-                          {getDepartmentById(apt?.departmentId)?.name || doctor.specialty} consultation
-                        </span>
+                        {!noShow && (
+                          <span className="resource-timeline__block-type">
+                            {getDepartmentById(apt?.departmentId)?.name || doctor.specialty} consultation
+                          </span>
+                        )}
                         <span className="resource-timeline__block-time">
                           {formatTimeRange(block.start, block.end)}
                         </span>
@@ -396,6 +428,16 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened }) 
           onEdit={() => {
             setPopover(null);
             openPanel(popover.doctor, popover.block.start, popover.block);
+          }}
+          onDelete={() => {
+            dispatch({
+              type: ACTION_TYPES.DELETE_SCHEDULE_BLOCK,
+              payload: {
+                doctorId: popover.doctor.id,
+                blockId: popover.block.id,
+              },
+            });
+            setPopover(null);
           }}
         />
       )}

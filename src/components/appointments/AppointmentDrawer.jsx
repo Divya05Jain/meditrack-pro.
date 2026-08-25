@@ -84,6 +84,21 @@ export function AppointmentDrawer() {
     });
   };
 
+  const handleDelete = () => {
+    if (
+      !window.confirm(
+        `Delete appointment for ${selectedAppointment.patient.name}? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    dispatch({
+      type: ACTION_TYPES.DELETE_APPOINTMENT,
+      payload: { id: selectedAppointment.id },
+    });
+  };
+
   return (
     <div className="drawer-overlay" onClick={handleBackdropClick}>
       <aside className="drawer drawer--appointment">
@@ -201,6 +216,16 @@ export function AppointmentDrawer() {
                 );
               })}
             </ol>
+          </div>
+
+          <div className="drawer__section drawer__section--actions">
+            <button
+              type="button"
+              className="btn btn--danger btn--full"
+              onClick={handleDelete}
+            >
+              Delete appointment
+            </button>
           </div>
         </div>
       </aside>

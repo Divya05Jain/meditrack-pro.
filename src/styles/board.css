@@ -251,6 +251,16 @@
   border-left-color: var(--primary);
 }
 
+.appointment-card--noshow {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.08);
+}
+
+.appointment-card--noshow:hover {
+  border-color: #f87171;
+}
+
 .appointment-card:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
@@ -296,6 +306,17 @@
 .priority-badge--normal {
   color: var(--primary);
   background: var(--primary-soft);
+}
+
+.appointment-card__noshow-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
 }
 
 .appointment-card__time {
@@ -402,6 +423,11 @@
 .appointment-card__status {
   font-size: 11px;
   color: var(--text-tertiary);
+}
+
+.appointment-card__status--noshow {
+  color: #dc2626;
+  font-weight: 600;
 }
 
 @media (max-width: 1366px) {

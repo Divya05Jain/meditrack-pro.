@@ -1,33 +1,95 @@
 import { useClinic } from '../../hooks/useClinic';
 import { ACTION_TYPES } from '../../reducers/clinicReducer';
-import { formatDisplayDate } from '../../utils/formatters';
+import { formatDisplayDate, formatScheduleDate } from '../../utils/formatters';
 
-export function Topbar({ searchValue, onSearchChange, onNewAppointment }) {
+export function Topbar({
+  searchValue,
+  onSearchChange,
+  onNewAppointment,
+  scheduleDate,
+  onScheduleDateChange,
+  onOpenSchedulePanel,
+}) {
   const { state, dispatch } = useClinic();
+  const isSchedule = state.activeView === 'schedule';
 
-  if (state.activeView === 'schedule') {
-    return null;
-  }
+  const shiftDate = (days) => {
+    const next = new Date(scheduleDate);
+    next.setDate(next.getDate() + days);
+    onScheduleDateChange(next);
+  };
 
   return (
     <header className="topbar">
       <div className="topbar__left">
-        <h1 className="topbar__title">Clinical Operations</h1>
-        <p className="topbar__subtitle">{formatDisplayDate()}</p>
+        <h1 className="topbar__title">
+          {isSchedule ? 'Doctor Schedule' : 'Clinical Operations'}
+        </h1>
+        <p className="topbar__subtitle">
+          {isSchedule
+            ? 'Daily clinical coverage and consultation assignments'
+            : formatDisplayDate()}
+        </p>
       </div>
 
       <div className="topbar__actions">
-        <div className="topbar__search">
-          <span className="topbar__search-icon" aria-hidden="true">⌕</span>
-          <input
-            type="search"
-            className="topbar__search-input"
-            placeholder="Search patients..."
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            aria-label="Search patients"
-          />
-        </div>
+        {isSchedule ? (
+          <div className="topbar__date-nav" aria-label="Schedule date">
+            <button
+              type="button"
+              className="topbar__date-btn"
+              onClick={() => shiftDate(-1)}
+              aria-label="Previous day"
+            >
+              ‹
+            </button>
+            <span className="topbar__date-label">
+              {formatScheduleDate(scheduleDate)}
+            </span>
+            <button
+              type="button"
+              className="topbar__date-btn"
+              onClick={() => shiftDate(1)}
+              aria-label="Next day"
+            >
+              ›
+            </button>
+          </div>
+        ) : (
+          <div className="topbar__search">
+            <span className="topbar__search-icon" aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              type="search"
+              className="topbar__search-input"
+              placeholder="Search patients..."
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Search patients"
+            />
+          </div>
+        )}
+
+        {!isSchedule && (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={onNewAppointment}
+          >
+            + New Appointment
+          </button>
+        )}
+
+        {isSchedule && (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={onOpenSchedulePanel}
+          >
+            + Schedule Appointment
+          </button>
+        )}
 
         <button
           type="button"
@@ -38,14 +100,6 @@ export function Topbar({ searchValue, onSearchChange, onNewAppointment }) {
         >
           Activity
           <span className="topbar__activity-count">{state.activity.length}</span>
-        </button>
-
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={onNewAppointment}
-        >
-          + New Appointment
         </button>
       </div>
     </header>

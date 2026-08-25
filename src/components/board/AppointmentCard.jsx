@@ -5,6 +5,7 @@ import {
   getWaitMinutes,
   getStatusLabel,
   capitalize,
+  isNoShow,
 } from '../../utils/formatters';
 
 const SHORT_LABELS = {
@@ -46,6 +47,7 @@ export function AppointmentCard({ appointment, isDragging, onDragStart }) {
   const doctor = getDoctorById(appointment.doctorId);
   const department = getDepartmentById(appointment.departmentId);
   const waitMinutes = getWaitMinutes(appointment.appointmentTime);
+  const noShow = isNoShow(appointment);
 
   const handleClick = () => {
     dispatch({
@@ -61,8 +63,9 @@ export function AppointmentCard({ appointment, isDragging, onDragStart }) {
     onDragStart?.(appointment.id);
   };
 
-  const footerText =
-    appointment.status === 'waiting'
+  const footerText = noShow
+    ? 'Doctor available'
+    : appointment.status === 'waiting'
       ? `Waiting ${waitMinutes}m`
       : appointment.status === 'completed'
         ? 'Visit complete'
@@ -72,7 +75,7 @@ export function AppointmentCard({ appointment, isDragging, onDragStart }) {
     <article
       className={`appointment-card appointment-card--${appointment.priority} ${
         isDragging ? 'appointment-card--dragging' : ''
-      }`}
+      } ${noShow ? 'appointment-card--noshow' : ''}`}
       draggable
       onDragStart={handleDragStart}
       onClick={handleClick}
@@ -86,9 +89,13 @@ export function AppointmentCard({ appointment, isDragging, onDragStart }) {
       }}
     >
       <div className="appointment-card__header">
-        <span className={`priority-badge priority-badge--${appointment.priority}`}>
-          {capitalize(appointment.priority)}
-        </span>
+        {noShow ? (
+          <span className="appointment-card__noshow-badge">No-show</span>
+        ) : (
+          <span className={`priority-badge priority-badge--${appointment.priority}`}>
+            {capitalize(appointment.priority)}
+          </span>
+        )}
         <span className="appointment-card__time">
           {formatTime(appointment.appointmentTime)}
         </span>
@@ -112,7 +119,11 @@ export function AppointmentCard({ appointment, isDragging, onDragStart }) {
       <WorkflowStrip subtasks={appointment.subtasks} />
 
       <div className="appointment-card__footer">
-        <span className="appointment-card__status">{footerText}</span>
+        <span
+          className={`appointment-card__status ${noShow ? 'appointment-card__status--noshow' : ''}`}
+        >
+          {footerText}
+        </span>
       </div>
     </article>
   );

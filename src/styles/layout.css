@@ -239,6 +239,43 @@
   background: rgba(37, 99, 235, 0.12);
 }
 
+.topbar__date-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.topbar__date-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-secondary);
+  transition: background var(--transition), color var(--transition);
+}
+
+.topbar__date-btn:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.topbar__date-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 130px;
+  text-align: center;
+  padding: 0 4px;
+}
+
 @media (max-width: 1280px) {
   .topbar__search-input {
     width: 160px;

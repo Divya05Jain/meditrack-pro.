@@ -1,5 +1,6 @@
 import { createActivityEntry, prependActivity } from '../utils/audit';
 import { formatTime } from '../utils/formatters';
+import { validateScheduleAssignment } from '../utils/scheduling';
 import {
   moveAppointment,
   normalizeColumnSequences,
@@ -15,6 +16,7 @@ export const ACTION_TYPES = {
   TOGGLE_ACTIVITY: 'TOGGLE_ACTIVITY',
   CREATE_APPOINTMENT: 'CREATE_APPOINTMENT',
   UPDATE_APPOINTMENT: 'UPDATE_APPOINTMENT',
+  DELETE_APPOINTMENT: 'DELETE_APPOINTMENT',
   MOVE_APPOINTMENT: 'MOVE_APPOINTMENT',
   REORDER_APPOINTMENTS: 'REORDER_APPOINTMENTS',
   UPDATE_SUBTASK: 'UPDATE_SUBTASK',
@@ -22,6 +24,7 @@ export const ACTION_TYPES = {
   ADD_ACTIVITY: 'ADD_ACTIVITY',
   CREATE_SCHEDULE_BLOCK: 'CREATE_SCHEDULE_BLOCK',
   UPDATE_SCHEDULE_BLOCK: 'UPDATE_SCHEDULE_BLOCK',
+  DELETE_SCHEDULE_BLOCK: 'DELETE_SCHEDULE_BLOCK',
 };
 
 function updateAppointmentById(appointments, id, updates) {
@@ -86,6 +89,35 @@ export function clinicReducer(state, action) {
       }
 
       return next;
+    }
+
+    case ACTION_TYPES.DELETE_APPOINTMENT: {
+      const { id } = action.payload;
+      const appointment = findAppointment(state.appointments, id);
+      if (!appointment) return state;
+
+      const doctors = state.doctors.map((doc) => ({
+        ...doc,
+        schedule: doc.schedule.filter((block) => block.appointmentId !== id),
+      }));
+
+      const activity = prependActivity(
+        state.activity,
+        createActivityEntry({
+          type: 'appointment_deleted',
+          message: `${appointment.patient.name} appointment deleted — ${id}`,
+          metadata: { appointmentId: id },
+        })
+      );
+
+      return {
+        ...state,
+        appointments: state.appointments.filter((apt) => apt.id !== id),
+        doctors,
+        selectedAppointmentId:
+          state.selectedAppointmentId === id ? null : state.selectedAppointmentId,
+        activity,
+      };
     }
 
     case ACTION_TYPES.MOVE_APPOINTMENT: {
@@ -214,6 +246,17 @@ export function clinicReducer(state, action) {
     case ACTION_TYPES.CREATE_SCHEDULE_BLOCK: {
       const { doctorId, block } = action.payload;
       const doctor = state.doctors.find((d) => d.id === doctorId);
+      if (!doctor) return state;
+
+      const validation = validateScheduleAssignment({
+        doctor,
+        start: block.start,
+        end: block.end,
+        existingSchedule: doctor.schedule,
+        date: block.date,
+      });
+
+      if (!validation.valid) return state;
 
       const doctors = state.doctors.map((doc) =>
         doc.id === doctorId
@@ -225,7 +268,7 @@ export function clinicReducer(state, action) {
         state.activity,
         createActivityEntry({
           type: 'schedule_created',
-          message: `${doctor?.name} scheduled for ${block.patientName} — ${formatTime(block.start)} to ${formatTime(block.end)}`,
+          message: `${doctor.name} scheduled for ${block.patientName} — ${formatTime(block.start)} to ${formatTime(block.end)}`,
           metadata: { doctorId, blockId: block.id, appointmentId: block.appointmentId },
         })
       );
@@ -237,6 +280,22 @@ export function clinicReducer(state, action) {
       const { doctorId, blockId, updates } = action.payload;
       const doctor = state.doctors.find((d) => d.id === doctorId);
       const existingBlock = doctor?.schedule.find((b) => b.id === blockId);
+      if (!doctor || !existingBlock) return state;
+
+      const start = updates.start ?? existingBlock.start;
+      const end = updates.end ?? existingBlock.end;
+      const date = updates.date ?? existingBlock.date;
+
+      const validation = validateScheduleAssignment({
+        doctor,
+        start,
+        end,
+        existingSchedule: doctor.schedule,
+        excludeId: blockId,
+        date,
+      });
+
+      if (!validation.valid) return state;
 
       const doctors = state.doctors.map((doc) =>
         doc.id === doctorId
@@ -249,15 +308,36 @@ export function clinicReducer(state, action) {
           : doc
       );
 
-      const start = updates.start || existingBlock?.start;
-      const end = updates.end || existingBlock?.end;
-
       const activity = prependActivity(
         state.activity,
         createActivityEntry({
           type: 'schedule_updated',
-          message: `${doctor?.name} schedule updated — ${formatTime(start)} to ${formatTime(end)}`,
+          message: `${doctor.name} schedule updated — ${formatTime(start)} to ${formatTime(end)}`,
           metadata: { doctorId, blockId },
+        })
+      );
+
+      return { ...state, doctors, activity };
+    }
+
+    case ACTION_TYPES.DELETE_SCHEDULE_BLOCK: {
+      const { doctorId, blockId } = action.payload;
+      const doctor = state.doctors.find((d) => d.id === doctorId);
+      const block = doctor?.schedule.find((b) => b.id === blockId);
+      if (!doctor || !block) return state;
+
+      const doctors = state.doctors.map((doc) =>
+        doc.id === doctorId
+          ? { ...doc, schedule: doc.schedule.filter((b) => b.id !== blockId) }
+          : doc
+      );
+
+      const activity = prependActivity(
+        state.activity,
+        createActivityEntry({
+          type: 'schedule_deleted',
+          message: `${doctor.name} booking removed — ${block.patientName} (${formatTime(block.start)}–${formatTime(block.end)})`,
+          metadata: { doctorId, blockId, appointmentId: block.appointmentId },
         })
       );
 

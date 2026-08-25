@@ -45,6 +45,21 @@
   border-color: #bfdbfe;
 }
 
+.btn--danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn--danger:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.btn--full {
+  width: 100%;
+}
+
 /* Badge */
 .badge {
   display: inline-flex;
@@ -222,6 +237,12 @@
 
 .drawer__section {
   margin-bottom: 22px;
+}
+
+.drawer__section--actions {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .drawer__section-title {
