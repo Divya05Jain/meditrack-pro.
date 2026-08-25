@@ -462,4 +462,5 @@ export const initialClinicState = {
   selectedAppointmentId: null,
   activeView: 'board',
   isActivityOpen: false,
+  lastValidationError: null,
 };

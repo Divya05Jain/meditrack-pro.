@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useClinic } from '../../hooks/useClinic';
+import { useDragScroll } from '../../hooks/useDragScroll';
 import { ACTION_TYPES } from '../../reducers/clinicReducer';
 import {
   validateScheduleAssignment,
@@ -69,6 +70,9 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
   const [attemptedRange, setAttemptedRange] = useState(null);
   const [popover, setPopover] = useState(null);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
+  const timelineRef = useDragScroll({
+    ignoreSelector: 'button, a, input, select, textarea, [data-no-drag-scroll]',
+  });
 
   const stats = useMemo(() => {
     let bookings = 0;
@@ -260,7 +264,7 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
       </div>
 
       <div className="resource-schedule__panel resource-schedule__panel--fade" key={dateKey}>
-        <div className="resource-timeline">
+        <div className="resource-timeline drag-scroll" ref={timelineRef}>
           <div className="resource-timeline__header">
             <div className="resource-timeline__resource-col">Doctor</div>
             <div className="resource-timeline__axis">
@@ -372,31 +376,50 @@ export function ScheduleGrid({ selectedDate, requestOpenPanel, onPanelOpened, sp
                         onClick={(e) => handleBlockClick(e, block, doctor)}
                         aria-label={`${block.patientName}, ${formatTimeRange(block.start, block.end)}`}
                       >
-                        {isConflict && <span className="resource-timeline__block-warn">⚠</span>}
-                        {noShow && (
-                          <span className="resource-timeline__noshow-badge">No-show</span>
-                        )}
-                        {priority !== 'normal' && !noShow && (
-                          <span
-                            className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`}
-                          />
-                        )}
-                        <span className="resource-timeline__block-name">
-                          {tier === 'narrow' ? getFirstName(block.patientName) : block.patientName}
+                        <span className="resource-timeline__block-content">
+                          {isConflict && <span className="resource-timeline__block-warn">⚠</span>}
+                          {noShow && (
+                            <span className="resource-timeline__noshow-badge">No-show</span>
+                          )}
+                          {priority !== 'normal' && !noShow && (
+                            <span
+                              className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`}
+                            />
+                          )}
+                          <span className="resource-timeline__block-name">
+                            {tier === 'narrow' ? getFirstName(block.patientName) : block.patientName}
+                          </span>
+                          {tier === 'wide' && !noShow && (
+                            <span className="resource-timeline__block-type">
+                              {deptName} consultation
+                            </span>
+                          )}
+                          {(tier === 'medium' || tier === 'wide') && (
+                            <span className="resource-timeline__block-time">
+                              {formatTimeRange(block.start, block.end)}
+                            </span>
+                          )}
+                          {tier === 'narrow' && (
+                            <span className="resource-timeline__block-time resource-timeline__block-time--compact">
+                              {formatTime(block.start)}
+                            </span>
+                          )}
                         </span>
-                        {tier === 'wide' && !noShow && (
-                          <span className="resource-timeline__block-type">
-                            {deptName} consultation
-                          </span>
-                        )}
-                        {(tier === 'medium' || tier === 'wide') && (
-                          <span className="resource-timeline__block-time">
-                            {formatTimeRange(block.start, block.end)}
-                          </span>
-                        )}
-                        {tier === 'narrow' && (
-                          <span className="resource-timeline__block-time resource-timeline__block-time--compact">
-                            {formatTime(block.start)}
+
+                        {tier !== 'wide' && (
+                          <span className="resource-timeline__block-hover" aria-hidden="true">
+                            {noShow && (
+                              <span className="resource-timeline__noshow-badge">No-show</span>
+                            )}
+                            {priority !== 'normal' && !noShow && (
+                              <span
+                                className={`resource-timeline__priority-dot resource-timeline__priority-dot--${priority}`}
+                              />
+                            )}
+                            <span className="resource-timeline__block-name">{block.patientName}</span>
+                            <span className="resource-timeline__block-time">
+                              {formatTimeRange(block.start, block.end)}
+                            </span>
                           </span>
                         )}
                       </button>

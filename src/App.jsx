@@ -24,6 +24,7 @@ function AppContent() {
   const [scheduleDate, setScheduleDate] = useState(getClinicNow());
   const [requestSchedulePanel, setRequestSchedulePanel] = useState(false);
   const [specialtyFilter, setSpecialtyFilter] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const specialties = useMemo(
     () => [...new Set(state.doctors.map((d) => d.specialty))].sort(),
@@ -51,7 +52,10 @@ function AppContent() {
 
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+      />
       <div className="app__main">
         <Topbar
           searchValue={searchValue}
@@ -65,19 +69,21 @@ function AppContent() {
           specialties={specialties}
         />
         <main className="app__content">
-          {state.activeView === 'board' ? (
-            <ClinicalBoard
-              searchValue={searchValue}
-              onSearchChange={setSearchValue}
-            />
-          ) : (
-            <DoctorSchedule
-              selectedDate={scheduleDate}
-              requestOpenPanel={requestSchedulePanel}
-              onPanelOpened={() => setRequestSchedulePanel(false)}
-              specialtyFilter={specialtyFilter}
-            />
-          )}
+          <div key={state.activeView} className="app__view">
+            {state.activeView === 'board' ? (
+              <ClinicalBoard
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+              />
+            ) : (
+              <DoctorSchedule
+                selectedDate={scheduleDate}
+                requestOpenPanel={requestSchedulePanel}
+                onPanelOpened={() => setRequestSchedulePanel(false)}
+                specialtyFilter={specialtyFilter}
+              />
+            )}
+          </div>
         </main>
       </div>
 

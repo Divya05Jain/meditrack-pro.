@@ -256,7 +256,9 @@ export function clinicReducer(state, action) {
         date: block.date,
       });
 
-      if (!validation.valid) return state;
+      if (!validation.valid) {
+        return { ...state, lastValidationError: validation };
+      }
 
       const doctors = state.doctors.map((doc) =>
         doc.id === doctorId
@@ -273,7 +275,7 @@ export function clinicReducer(state, action) {
         })
       );
 
-      return { ...state, doctors, activity };
+      return { ...state, doctors, activity, lastValidationError: null };
     }
 
     case ACTION_TYPES.UPDATE_SCHEDULE_BLOCK: {
@@ -295,7 +297,9 @@ export function clinicReducer(state, action) {
         date,
       });
 
-      if (!validation.valid) return state;
+      if (!validation.valid) {
+        return { ...state, lastValidationError: validation };
+      }
 
       const doctors = state.doctors.map((doc) =>
         doc.id === doctorId
@@ -317,7 +321,7 @@ export function clinicReducer(state, action) {
         })
       );
 
-      return { ...state, doctors, activity };
+      return { ...state, doctors, activity, lastValidationError: null };
     }
 
     case ACTION_TYPES.DELETE_SCHEDULE_BLOCK: {

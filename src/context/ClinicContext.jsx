@@ -8,6 +8,25 @@ const ClinicContext = createContext(null);
 
 const TOAST_DURATION = 3200;
 
+const SCHEDULE_ACTIONS = new Set([
+  ACTION_TYPES.CREATE_SCHEDULE_BLOCK,
+  ACTION_TYPES.UPDATE_SCHEDULE_BLOCK,
+]);
+
+function getValidationToast(validation) {
+  const titles = {
+    overlap: 'Scheduling conflict',
+    shift: 'Outside shift hours',
+    invalid: 'Invalid time range',
+  };
+
+  return {
+    title: titles[validation.type] || 'Schedule validation failed',
+    message: validation.reason,
+    type: 'warning',
+  };
+}
+
 function getToastForAction(action, state) {
   switch (action.type) {
     case ACTION_TYPES.CREATE_APPOINTMENT: {
@@ -32,7 +51,7 @@ function getToastForAction(action, state) {
     }
     case ACTION_TYPES.MOVE_APPOINTMENT: {
       const apt = state.appointments.find((a) => a.id === action.payload.appointmentId);
-      return { title: 'Workflow updated', message: apt ? `${apt.patient.name} · ${apt.id}` : undefined };
+      return { title: 'Visit updated', message: apt ? `${apt.patient.name} · ${apt.id}` : undefined };
     }
     case ACTION_TYPES.ASSIGN_STAFF: {
       const apt = state.appointments.find((a) => a.id === action.payload.appointmentId);
@@ -40,7 +59,7 @@ function getToastForAction(action, state) {
     }
     case ACTION_TYPES.UPDATE_SUBTASK: {
       const apt = state.appointments.find((a) => a.id === action.payload.appointmentId);
-      return { title: 'Workflow updated', message: apt ? `${apt.patient.name} · ${apt.id}` : undefined };
+      return { title: 'Visit updated', message: apt ? `${apt.patient.name} · ${apt.id}` : undefined };
     }
     case ACTION_TYPES.CREATE_SCHEDULE_BLOCK: {
       const block = action.payload.block;
@@ -104,8 +123,19 @@ export function ClinicProvider({ children }) {
 
   const dispatch = useCallback(
     (action) => {
-      const toast = getToastForAction(action, state);
+      const nextState = clinicReducer(state, action);
       rawDispatch(action);
+
+      if (
+        SCHEDULE_ACTIONS.has(action.type) &&
+        nextState.lastValidationError &&
+        nextState.lastValidationError !== state.lastValidationError
+      ) {
+        showToast(getValidationToast(nextState.lastValidationError));
+        return;
+      }
+
+      const toast = getToastForAction(action, state);
       if (toast) showToast(toast);
     },
     [state, showToast]

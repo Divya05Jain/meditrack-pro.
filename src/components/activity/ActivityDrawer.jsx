@@ -6,13 +6,13 @@ const TYPE_CONFIG = {
   appointment_created: { dot: 'activity-timeline__dot--create', category: 'Appointment' },
   appointment_updated: { dot: 'activity-timeline__dot--create', category: 'Appointment' },
   appointment_deleted: { dot: 'activity-timeline__dot--priority', category: 'Appointment' },
-  appointment_moved: { dot: 'activity-timeline__dot--move', category: 'Workflow' },
-  appointment_reordered: { dot: 'activity-timeline__dot--move', category: 'Workflow' },
+  appointment_moved: { dot: 'activity-timeline__dot--move', category: 'Clinical' },
+  appointment_reordered: { dot: 'activity-timeline__dot--move', category: 'Clinical' },
   staff_assigned: { dot: 'activity-timeline__dot--assign', category: 'Staff' },
   schedule_created: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
   schedule_updated: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
   schedule_deleted: { dot: 'activity-timeline__dot--schedule', category: 'Schedule' },
-  subtask_status_changed: { dot: 'activity-timeline__dot--subtask', category: 'Workflow' },
+  subtask_status_changed: { dot: 'activity-timeline__dot--subtask', category: 'Clinical' },
   priority_changed: { dot: 'activity-timeline__dot--priority', category: 'Appointment' },
 };
 

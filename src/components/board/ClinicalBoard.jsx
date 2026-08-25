@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useClinic } from '../../hooks/useClinic';
 import { useAppointmentFilters } from '../../hooks/useAppointmentFilters';
+import { useDragScroll } from '../../hooks/useDragScroll';
 import { WORKFLOW_COLUMNS } from '../../data/mockData';
 import { getWaitMinutes } from '../../utils/formatters';
 import { ACTION_TYPES } from '../../reducers/clinicReducer';
@@ -79,6 +80,9 @@ export function ClinicalBoard({ searchValue, onSearchChange }) {
   const [departmentId, setDepartmentId] = useState('');
   const [priority, setPriority] = useState('');
   const [draggingId, setDraggingId] = useState(null);
+  const columnsRef = useDragScroll({
+    ignoreSelector: '.appointment-card, button, a, input, select, textarea, [data-no-drag-scroll]',
+  });
 
   const filters = {
     search: searchValue,
@@ -157,7 +161,7 @@ export function ClinicalBoard({ searchValue, onSearchChange }) {
       )}
 
       <div className="clinical-board__columns-wrap">
-        <div className="clinical-board__columns">
+        <div className="clinical-board__columns drag-scroll" ref={columnsRef}>
           {WORKFLOW_COLUMNS.map((column) => (
             <BoardColumn
               key={column.id}
